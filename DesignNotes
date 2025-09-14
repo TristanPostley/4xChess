@@ -1,0 +1,229 @@
+Settlement Chess
+
+Goal: Claim (64) squares
+Start: King + Retainers
+        Board covered in fog
+
+Move Pieces -> Reveal Board 
+                Discover production nodes
+                    factories -> pawns
+                    horses -> knights
+                    monasteries -> bishops
+                    castles -> rooks
+                    ? -> queen
+
+Use pieces at factories to create pawns
+Use pawns at training grounds to create pieces
+Use pawns at empty squares to claim territory
+Claim adjacent territory to make settlements -> cities -> Queens?
+Most common piece in army -> ability
+    Knights -> Extra move
+    Bishops -> Convert peasants to pawns
+    Rooks -> Build fortifications
+
+Army moves on single square under King's banner until deployed
+Other King(s) travel the board doing the same
+First to claim (64) squares or last King standing wins
+
+
+Settlement Chess - JavaScript Migration Guide
+Project Overview
+Settlement Chess is a strategic chess variant that transforms traditional 8x8 chess into a 4X-style strategy game. Players navigate a large world board, discover production nodes, claim territory, and engage in chess-based combat.
+
+
+class WorldBoard {
+  constructor() {
+    this.worldWidth = 20;
+    this.worldHeight = 20;
+    this.worldGrid = []; // 2D array
+    this.armies = new Map(); // armyId -> Army
+    this.fogOfWar = []; // visibility tracking
+    this.productionNodes = []; // production sites
+    this.claimedTerritory = new Set(); // claimed positions
+  }
+
+  initializeWorld() {
+    // Initialize empty grid with fog of war
+  }
+
+  revealTiles(centerX, centerY, radius = 1) {
+    // Reveal tiles around position, check for production nodes
+  }
+
+  deployArmy(armyId, targetX, targetY) {
+    // Deploy army and reveal surrounding tiles
+  }
+
+  claimTerritory(x, y, playerId) {
+    // Claim empty territory with pawn
+  }
+}
+
+class Army {
+  constructor(armyId, playerSide) {
+    this.armyId = armyId;
+    this.playerSide = playerSide; // 'W' or 'B'
+    this.pieces = [];
+    this.consolidated = true;
+    this.worldPosition = { x: 0, y: 0 };
+    this.deploymentTiles = [];
+    this.armyStrength = 0;
+  }
+
+  addPiece(piece) {
+    this.pieces.push(piece);
+    this.updateArmyStrength();
+  }
+
+  deployArmy(targetX, targetY) {
+    // Deploy pieces in spiral pattern around target
+  }
+
+  getArmyBonuses() {
+    // Return bonuses based on piece composition
+    // Knights→Extra movement, Bishops→Convert peasants, Rooks→Fortifications
+  }
+}
+
+
+class WorldCamera {
+  constructor() {
+    this.position = { x: 0, y: 0 };
+    this.targetPosition = { x: 0, y: 0 };
+    this.zoom = 1.0;
+    this.worldBounds = { x: 0, y: 0, width: 1280, height: 1280 };
+  }
+
+  moveToPosition(x, y) {
+    // Smooth movement with bounds clamping
+  }
+
+  update(deltaTime) {
+    // Interpolate to target position
+  }
+}
+
+
+class WorldInput {
+  constructor(worldBoard, camera) {
+    this.worldBoard = worldBoard;
+    this.camera = camera;
+  }
+
+  handleKeyboard(keyCode) {
+    // WASD movement, Space for deployment, 1/2 for army selection
+  }
+
+  handleMouse(event) {
+    // Drag panning, wheel zoom, click selection
+  }
+
+  screenToWorld(screenX, screenY) {
+    // Convert screen coordinates to world coordinates
+  }
+}
+
+
+
+class ProductionSystem {
+  constructor(worldBoard) {
+    this.productionCosts = {
+      'factory': { 'P': 1 },    // 1 piece → 1 pawn
+      'training': { 'P': 2 },   // 2 pawns → 1 piece
+      'monastery': { 'B': 1 },  // 1 piece → 1 bishop
+      'castle': { 'R': 1 },     // 1 piece → 1 rook
+      'stable': { 'N': 1 }      // 1 piece → 1 knight
+    };
+  }
+
+  produceAtNode(nodeX, nodeY, armyId, pieceType) {
+    // Validate cost, remove pieces, add new piece
+  }
+}
+
+
+
+class CombatSystem {
+  initiateCombat(army1Id, army2Id, worldBoard) {
+    // Create 8x8 battlefield
+    // Deploy armies to battlefield
+    // Resolve with chess engine integration
+  }
+
+  resolveCombat(battlefield) {
+    // Integrate with Stockfish or similar chess engine
+    // Return winner, losses, territory gained
+  }
+}
+
+
+
+class SettlementChessGame {
+  constructor() {
+    this.worldBoard = new WorldBoard();
+    this.camera = new WorldCamera();
+    this.inputHandler = new WorldInput(this.worldBoard, this.camera);
+    this.gameState = 'playing';
+    this.currentPlayer = 'W';
+  }
+
+  initialize() {
+    this.worldBoard.initializeWorld();
+    this.setupInitialArmies();
+    this.setupEventListeners();
+  }
+
+  update(deltaTime) {
+    this.camera.update(deltaTime);
+    this.checkVictoryConditions();
+  }
+
+  checkVictoryConditions() {
+    // Check 64 territory OR king elimination
+  }
+}
+
+
+
+class TestSuite {
+  constructor() {
+    this.tests = [];
+    this.results = [];
+  }
+
+  addTest(name, testFunction) {
+    this.tests.push({ name, testFunction });
+  }
+
+  async runAllTests() {
+    // Run all tests and collect results
+  }
+
+  testWorldBoardCreation() {
+    // Validate world grid dimensions and initialization
+  }
+
+  testArmyDeployment() {
+    // Test army deployment and position validation
+  }
+}
+
+
+Implementation Notes
+Key Differences from Godot:
+No signals → Use event listeners/callbacks
+No scene system → Use DOM/Canvas for rendering
+No built-in physics → Implement collision detection manually
+No built-in input → Use browser event system
+Recommended Tech Stack:
+Rendering: HTML5 Canvas or WebGL
+Game Loop: requestAnimationFrame()
+Input: Browser keyboard/mouse events
+Chess Engine: WebAssembly Stockfish
+State Management: Redux or similar
+Performance Considerations:
+Spatial partitioning for collision detection
+Object pooling for frequent create/destroy
+Lazy loading for production nodes
+Efficient rendering (only visible tiles)
+This migration guide provides a complete foundation for implementing Settlement Chess in JavaScript while preserving all the strategic mechanics and game depth of the original design.
