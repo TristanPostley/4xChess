@@ -1,7 +1,7 @@
 // src/game/worldBoard.js
 // World board management for Settlement Chess
 
-import { createWorldBoard, revealTiles, claimTerritory } from './board.js';
+import { createWorldBoard, claimTerritory } from './board.js';
 import { Army } from './army.js';
 
 export class WorldBoard {
@@ -10,7 +10,6 @@ export class WorldBoard {
     this.worldHeight = 20;
     this.worldGrid = [];
     this.armies = new Map(); // armyId -> Army
-    this.fogOfWar = []; // visibility tracking
     this.productionNodes = []; // production sites
     this.claimedTerritory = new Set(); // claimed positions
     this.initializeWorld();
@@ -19,7 +18,6 @@ export class WorldBoard {
   initializeWorld() {
     const world = createWorldBoard(this.worldWidth, this.worldHeight);
     this.worldGrid = world.worldGrid;
-    this.fogOfWar = world.fogOfWar;
     this.productionNodes = world.productionNodes;
     this.claimedTerritory = world.claimedTerritory;
     
@@ -49,18 +47,11 @@ export class WorldBoard {
     }
   }
 
-  revealTiles(centerX, centerY, radius = 1) {
-    return revealTiles(this, centerX, centerY, radius);
-  }
-
   deployArmy(armyId, targetX, targetY) {
     const army = this.armies.get(armyId);
     if (!army) return false;
 
     const deployed = army.deployArmy(targetX, targetY, this);
-    
-    // Reveal tiles around deployment
-    this.revealTiles(targetX, targetY, 2);
     
     return deployed;
   }

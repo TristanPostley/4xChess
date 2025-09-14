@@ -1,6 +1,6 @@
 // tests/board.test.js
 import { test, expect } from 'vitest';
-import { createEmptyBoard, setPiece, createWorldBoard, revealTiles, claimTerritory } from '../src/game/board.js';
+import { createEmptyBoard, setPiece, createWorldBoard, claimTerritory } from '../src/game/board.js';
 import { Army } from '../src/game/army.js';
 
 test('createEmptyBoard creates correct dimensions', () => {
@@ -21,23 +21,8 @@ test('createWorldBoard initializes correctly', () => {
   const world = createWorldBoard(20, 20);
   expect(world.worldGrid).toHaveLength(20);
   expect(world.worldGrid[0]).toHaveLength(20);
-  expect(world.fogOfWar).toHaveLength(20);
-  expect(world.fogOfWar[0]).toHaveLength(20);
   expect(world.productionNodes).toEqual([]);
   expect(world.claimedTerritory).toBeInstanceOf(Set);
-});
-
-test('revealTiles reveals correct area', () => {
-  const world = createWorldBoard(10, 10);
-  const revealed = revealTiles(world, 5, 5, 1);
-  
-  // Should reveal 3x3 area around center
-  expect(revealed).toHaveLength(9);
-  
-  // Check that fog of war is cleared
-  expect(world.fogOfWar[5][5]).toBe(false);
-  expect(world.fogOfWar[4][4]).toBe(false);
-  expect(world.fogOfWar[6][6]).toBe(false);
 });
 
 test('claimTerritory works correctly', () => {

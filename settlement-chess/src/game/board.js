@@ -27,34 +27,16 @@ export function setPiece(board, x, y, piece) {
 // Settlement Chess specific functions
 export function createWorldBoard(width = 20, height = 20) {
   const worldGrid = Array.from({length: height}, () => Array(width).fill(null));
-  const fogOfWar = Array.from({length: height}, () => Array(width).fill(true));
   const productionNodes = [];
   const claimedTerritory = new Set();
   
   return {
     worldGrid,
-    fogOfWar,
     productionNodes,
     claimedTerritory,
     width,
     height
   };
-}
-
-export function revealTiles(worldBoard, centerX, centerY, radius = 1) {
-  const { fogOfWar, width, height } = worldBoard;
-  const revealed = [];
-  
-  for (let y = Math.max(0, centerY - radius); y <= Math.min(height - 1, centerY + radius); y++) {
-    for (let x = Math.max(0, centerX - radius); x <= Math.min(width - 1, centerX + radius); x++) {
-      if (fogOfWar[y][x]) {
-        fogOfWar[y][x] = false;
-        revealed.push({ x, y, tile: worldBoard.worldGrid[y][x] });
-      }
-    }
-  }
-  
-  return revealed;
 }
 
 export function claimTerritory(worldBoard, x, y, playerId) {

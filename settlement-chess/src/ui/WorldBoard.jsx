@@ -71,13 +71,6 @@ export function WorldBoardComponent() {
           continue;
         }
         
-        // Draw fog of war
-        if (board.fogOfWar[y][x]) {
-          ctx.fillStyle = '#2a2a2a';
-          ctx.fillRect(screenX, screenY, scaledTileSize, scaledTileSize);
-          continue;
-        }
-        
         // Draw revealed tile
         const tile = board.worldGrid[y][x];
         if (tile) {
