@@ -1,5 +1,5 @@
 // src/ui/WorldBoard.jsx
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, use } from 'react';
 import { WorldBoard } from '../game/worldBoard.js';
 import { Army } from '../game/army.js';
 
@@ -182,14 +182,45 @@ export function WorldBoardComponent() {
     }
   };
 
+  
   useEffect(() => {
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [worldBoard]);
-
-  if (!worldBoard) {
-    return <div>Loading...</div>;
-  }
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    
+    const handleCanvasClick = (event) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+      
+      const scaledTileSize = TILE_SIZE * camera.zoom;
+      const worldX = Math.floor((x - BOARD_PADDING + camera.x * scaledTileSize) / scaledTileSize);
+      const worldY = Math.floor((y - BOARD_PADDING + camera.y * scaledTileSize) / scaledTileSize);
+      
+      if (worldX >= 0 && worldX < worldBoard.worldWidth && 
+        worldY >= 0 && worldY < worldBoard.worldHeight) {
+          
+          const tile = worldBoard.worldGrid[worldY][worldX];
+          console.log(`Board clicked at coordinates (${worldX}, ${worldY}):`, tile);
+        } else {
+          console.log(`Click outside board bounds: screen(${x}, ${y}) -> world(${worldX}, ${worldY})`);
+        }
+      };
+      
+      canvas.addEventListener('click', handleCanvasClick);
+      
+      return () => {
+        canvas.removeEventListener('click', handleCanvasClick);
+      };
+    }, [worldBoard, camera]);
+    
+    useEffect(() => {
+      window.addEventListener('keydown', handleKeyDown);
+      return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [worldBoard]);
+  
+    if (!worldBoard) {
+      return <div>Loading...</div>;
+    }
 
   return (
     <div className="world-board-container">
