@@ -233,6 +233,7 @@ export function WorldBoardComponent() {
       case 'escape':
       // Clear King selection
       selectedKingTileRef.current = null;
+      forceRender(prev => prev + 1); // Trigger re-render
       break;
     }
   };
@@ -278,6 +279,7 @@ export function WorldBoardComponent() {
               // Clear selection if clicking on non-adjacent tile
               console.log(`Clearing King selection - not adjacent`);
               selectedKingTileRef.current = null;
+              forceRender(prev => prev + 1); // Trigger re-render
             }
           } else {
             console.log(`No King selected, clearing selection`);
