@@ -36,6 +36,11 @@ export function WorldBoardComponent() {
     
     board.addArmy(army1);
     board.addArmy(army2);
+
+    // Add King in top left corner (x=0, y=0)
+    board.worldGrid[0][0] = { type: 'K', color: 'W', deployed: true };
+    board.worldGrid[0][5] = { type: 'K', color: 'B', deployed: true };
+
     
     setWorldBoard(board);
     setSelectedArmy(army1);
