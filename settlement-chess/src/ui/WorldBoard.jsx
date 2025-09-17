@@ -11,7 +11,8 @@ export function WorldBoardComponent() {
   const [selectedArmy, setSelectedArmy] = useState(null);
   const [camera, setCamera] = useState({ x: 0, y: 0, zoom: 1 });
   const [gameState, setGameState] = useState('playing');
-  const [selectedKingTile, setSelectedKingTile] = useState(null);
+  const selectedKingTileRef = useRef(null);
+  const [, forceRender] = useState(0);
   const canvasRef = useRef(null);
 
   useEffect(() => {
@@ -55,7 +56,7 @@ export function WorldBoardComponent() {
     
     const ctx = canvas.getContext('2d');
     drawWorld(ctx, worldBoard, camera);
-  }, [worldBoard, camera, selectedKingTile]); // ← Add selectedKingTile here
+  }, [worldBoard, camera, selectedKingTileRef.current]); // ← Add selectedKingTile here
 
   const drawWorld = (ctx, board, cam) => {
     const canvas = ctx.canvas;
@@ -101,10 +102,17 @@ export function WorldBoardComponent() {
         ctx.strokeRect(screenX, screenY, scaledTileSize, scaledTileSize);
         
         // Draw gold border for selected King tile
-        if (selectedKingTile && selectedKingTile.x === x && selectedKingTile.y === y) {
+        if (selectedKingTileRef.current && selectedKingTileRef.current.x === x && selectedKingTileRef.current.y === y) {
           ctx.strokeStyle = '#FFD700'; // Gold color
           ctx.lineWidth = 4; // Thick border
           ctx.strokeRect(screenX + 2, screenY + 2, scaledTileSize - 4, scaledTileSize - 4);
+        }
+
+        // Draw blue borders for adjacent tiles
+        if (selectedKingTileRef.current && isAdjacent(selectedKingTileRef.current.x, selectedKingTileRef.current.y, x, y)) {
+          ctx.strokeStyle = '#0066FF'; // Blue color
+          ctx.lineWidth = 2; // Medium border
+          ctx.strokeRect(screenX + 1, screenY + 1, scaledTileSize - 2, scaledTileSize - 2);
         }
 
         // Draw piece symbols
@@ -132,6 +140,12 @@ export function WorldBoardComponent() {
     }
   };
 
+  const isAdjacent = (x1, y1, x2, y2) => {
+    const dx = Math.abs(x2 - x1);
+    const dy = Math.abs(y2 - y1);
+    return (dx === 1 && dy === 0) || (dx === 0 && dy === 1) || (dx === 1 && dy === 1);
+  };
+
   const getPieceSymbol = (type) => {
     const symbols = {
       'K': '♔', 'Q': '♕', 'R': '♖', 'B': '♗', 'N': '♘', 'P': '♙'
@@ -146,6 +160,30 @@ export function WorldBoardComponent() {
     return symbols[nodeType] || '?';
   };
 
+  const moveKing = (fromX, fromY, toX, toY) => {
+    const fromTile = worldBoard.worldGrid[fromY][fromX];
+    
+    if (fromTile && fromTile.type === 'K') {
+      // Move the King to new position
+      worldBoard.worldGrid[toY][toX] = {
+        ...fromTile,
+        type: 'K',
+        color: fromTile.color
+      };
+      
+      // Clear the original position
+      worldBoard.worldGrid[fromY][fromX] = null;
+      
+      // Update selected King position
+      selectedKingTileRef.current = { x: toX, y: toY };
+      
+      // Trigger re-render
+      setWorldBoard({...worldBoard});
+      
+      console.log(`King moved successfully to (${toX}, ${toY})`);
+    }
+  };
+
   const handleCanvasClick = (event) => {
     if (!worldBoard || !selectedArmy) return;
     
@@ -158,15 +196,15 @@ export function WorldBoardComponent() {
     const worldX = Math.floor((x - BOARD_PADDING + camera.x * scaledTileSize) / scaledTileSize);
     const worldY = Math.floor((y - BOARD_PADDING + camera.y * scaledTileSize) / scaledTileSize);
     
-    if (worldX >= 0 && worldX < worldBoard.worldWidth && 
-        worldY >= 0 && worldY < worldBoard.worldHeight) {
+    // if (worldX >= 0 && worldX < worldBoard.worldWidth && 
+    //     worldY >= 0 && worldY < worldBoard.worldHeight) {
       
-      // Deploy army at clicked location
-      const deployed = worldBoard.deployArmy(selectedArmy.armyId, worldX, worldY);
-      if (deployed.length > 0) {
-        setWorldBoard({...worldBoard}); // Trigger re-render
-      }
-    }
+    //   // Deploy army at clicked location
+    //   const deployed = worldBoard.deployArmy(selectedArmy.armyId, worldX, worldY);
+    //   if (deployed.length > 0) {
+    //     setWorldBoard({...worldBoard}); // Trigger re-render
+    //   }
+    // }
   };
 
   const handleKeyDown = (event) => {
@@ -194,7 +232,7 @@ export function WorldBoardComponent() {
         break;
       case 'escape':
       // Clear King selection
-      setSelectedKingTile(null);
+      selectedKingTileRef.current = null;
       break;
     }
   };
@@ -221,11 +259,30 @@ export function WorldBoardComponent() {
         
         // Check if clicked on a King piece
         if (tile && tile.type === 'K') {
-          setSelectedKingTile({ x: worldX, y: worldY });
+          selectedKingTileRef.current = { x: worldX, y: worldY };
+          forceRender(prev => prev + 1); // Trigger re-render
           console.log(`King selected at (${worldX}, ${worldY})`);
         } else {
-          // Clear selection if clicking on non-King tile
-          setSelectedKingTile(null);
+          console.log(`Clicked on non-King tile. selectedKingTile:`, selectedKingTileRef.current);
+          
+          if (selectedKingTileRef.current) {
+            // Debug: Check if we're trying to move
+            const isAdj = isAdjacent(selectedKingTileRef.current.x, selectedKingTileRef.current.y, worldX, worldY);
+            console.log(`King at (${selectedKingTileRef.current.x}, ${selectedKingTileRef.current.y}), clicked (${worldX}, ${worldY}), adjacent: ${isAdj}`);
+            
+            if (isAdj) {
+              // Move King to adjacent tile
+              console.log(`Moving King from (${selectedKingTileRef.current.x}, ${selectedKingTileRef.current.y}) to (${worldX}, ${worldY})`);
+              moveKing(selectedKingTileRef.current.x, selectedKingTileRef.current.y, worldX, worldY);
+            } else {
+              // Clear selection if clicking on non-adjacent tile
+              console.log(`Clearing King selection - not adjacent`);
+              selectedKingTileRef.current = null;
+            }
+          } else {
+            console.log(`No King selected, clearing selection`);
+            selectedKingTileRef.current = null;
+          }
         }
 
         } else {
