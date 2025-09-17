@@ -11,6 +11,7 @@ export function WorldBoardComponent() {
   const [selectedArmy, setSelectedArmy] = useState(null);
   const [camera, setCamera] = useState({ x: 0, y: 0, zoom: 1 });
   const [gameState, setGameState] = useState('playing');
+  const [selectedKingTile, setSelectedKingTile] = useState(null);
   const canvasRef = useRef(null);
 
   useEffect(() => {
@@ -54,7 +55,7 @@ export function WorldBoardComponent() {
     
     const ctx = canvas.getContext('2d');
     drawWorld(ctx, worldBoard, camera);
-  }, [worldBoard, camera]);
+  }, [worldBoard, camera, selectedKingTile]); // ← Add selectedKingTile here
 
   const drawWorld = (ctx, board, cam) => {
     const canvas = ctx.canvas;
@@ -99,6 +100,13 @@ export function WorldBoardComponent() {
         ctx.lineWidth = 1;
         ctx.strokeRect(screenX, screenY, scaledTileSize, scaledTileSize);
         
+        // Draw gold border for selected King tile
+        if (selectedKingTile && selectedKingTile.x === x && selectedKingTile.y === y) {
+          ctx.strokeStyle = '#FFD700'; // Gold color
+          ctx.lineWidth = 4; // Thick border
+          ctx.strokeRect(screenX + 2, screenY + 2, scaledTileSize - 4, scaledTileSize - 4);
+        }
+
         // Draw piece symbols
         if (tile && tile.type !== 'production' && tile.type !== 'claimed') {
           ctx.fillStyle = tile.color === 'W' ? '#FFF' : '#000';
@@ -184,6 +192,10 @@ export function WorldBoardComponent() {
       case '2':
         setSelectedArmy(worldBoard.getArmy('army2'));
         break;
+      case 'escape':
+      // Clear King selection
+      setSelectedKingTile(null);
+      break;
     }
   };
 
@@ -204,8 +216,18 @@ export function WorldBoardComponent() {
       if (worldX >= 0 && worldX < worldBoard.worldWidth && 
         worldY >= 0 && worldY < worldBoard.worldHeight) {
           
-          const tile = worldBoard.worldGrid[worldY][worldX];
-          console.log(`Board clicked at coordinates (${worldX}, ${worldY}):`, tile);
+        const tile = worldBoard.worldGrid[worldY][worldX];
+        console.log(`Board clicked at coordinates (${worldX}, ${worldY}):`, tile);
+        
+        // Check if clicked on a King piece
+        if (tile && tile.type === 'K') {
+          setSelectedKingTile({ x: worldX, y: worldY });
+          console.log(`King selected at (${worldX}, ${worldY})`);
+        } else {
+          // Clear selection if clicking on non-King tile
+          setSelectedKingTile(null);
+        }
+
         } else {
           console.log(`Click outside board bounds: screen(${x}, ${y}) -> world(${worldX}, ${worldY})`);
         }
@@ -233,7 +255,7 @@ export function WorldBoardComponent() {
         <h2>Settlement Chess</h2>
         <p>Selected Army: {selectedArmy?.armyId} ({selectedArmy?.playerSide})</p>
         <p>Army Strength: {selectedArmy?.armyStrength}</p>
-        <p>Controls: WASD to move camera, 1/2 to select army, Click to deploy</p>
+        <p>Controls: WASD to move camera, 1/2 to select army, Click King to select, Escape to deselect</p>
       </div>
       
       <canvas
