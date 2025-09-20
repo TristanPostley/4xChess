@@ -14,6 +14,7 @@ export function WorldBoardComponent() {
   const selectedKingTileRef = useRef(null);
   const [, forceRender] = useState(0);
   const canvasRef = useRef(null);
+  const [canvasSize, setCanvasSize] = useState({ width: 800, height: 600 });
 
   useEffect(() => {
     // Initialize the game
@@ -57,6 +58,22 @@ export function WorldBoardComponent() {
     const ctx = canvas.getContext('2d');
     drawWorld(ctx, worldBoard, camera);
   }, [worldBoard, camera, selectedKingTileRef.current]); // ← Add selectedKingTile here
+
+  useEffect(() => {
+    const updateCanvasSize = () => {
+      // Simple calculation: full window minus navbar
+      const navbarHeight = 60; // Adjust based on your navbar height
+      const width = window.innerWidth;
+      const height = window.innerHeight - navbarHeight;
+      
+      setCanvasSize({ width, height });
+    };
+
+    updateCanvasSize();
+    window.addEventListener('resize', updateCanvasSize);
+    
+    return () => window.removeEventListener('resize', updateCanvasSize);
+  }, []);
 
   const drawWorld = (ctx, board, cam) => {
     const canvas = ctx.canvas;
@@ -224,14 +241,16 @@ export function WorldBoardComponent() {
 
   const handleKeyDown = (event) => {
     const moveSpeed = 1;
-    const zoomSpeed = 0.1;
     
     switch(event.key.toLowerCase()) {
       case 'w':
         setCamera(prev => ({ ...prev, y: Math.max(0, prev.y - moveSpeed) }));
         break;
       case 's':
-        setCamera(prev => ({ ...prev, y: Math.min(worldBoard.worldHeight - 10, prev.y + moveSpeed) }));
+        setCamera(prev => ({ 
+          ...prev, 
+          y: Math.min(worldBoard.worldHeight - Math.floor(canvasSize.height / (TILE_SIZE * camera.zoom)), prev.y + moveSpeed) 
+        }));
         break;
       case 'a':
         setCamera(prev => ({ ...prev, x: Math.max(0, prev.x - moveSpeed) }));
@@ -333,30 +352,65 @@ export function WorldBoardComponent() {
     }
 
   return (
-    <div className="world-board-container">
-      <div className="game-info">
-        <h2>Settlement Chess</h2>
-        <p>Selected Army: {selectedArmy?.armyId} ({selectedArmy?.playerSide})</p>
-        <p>Army Strength: {selectedArmy?.armyStrength}</p>
-        <p>Controls: WASD to move camera, 1/2 to select army, Click King to select, Escape to deselect</p>
-      </div>
-      
+    <>
+      {/* Fixed navbar at top */}
+      <nav style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: '60px',
+        backgroundColor: '#333',
+        color: 'white',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '0 20px',
+        zIndex: 1000
+      }}>
+        <h2 style={{ margin: 0 }}>Settlement Chess</h2>
+        <div style={{ display: 'flex', gap: '20px' }}>
+          <span>Army: {selectedArmy?.armyId} ({selectedArmy?.playerSide})</span>
+        </div>
+        <div style={{ fontSize: '12px' }}>
+          WASD: Camera | 1/2: Army | Click King | Esc: Deselect
+        </div>
+      </nav>
+
+      {/* Full-page canvas */}
       <canvas
         ref={canvasRef}
-        width={800}
-        height={600}
+        width={canvasSize.width}
+        height={canvasSize.height}
         onClick={handleCanvasClick}
-        style={{ border: '1px solid #ccc', cursor: 'crosshair' }}
+        style={{
+          position: 'fixed',
+          top: '60px', // Below navbar
+          left: 0,
+          cursor: 'crosshair',
+          backgroundColor: '#4a4a4a' // Dark background
+        }}
       />
-      
-      <div className="army-info">
-        <h3>Army Bonuses</h3>
+
+      {/* Optional floating army info panel */}
+      <div style={{
+        position: 'fixed',
+        top: '80px',
+        right: '20px',
+        width: '200px',
+        backgroundColor: 'rgba(0,0,0,0.8)',
+        color: 'white',
+        padding: '10px',
+        borderRadius: '5px',
+        fontSize: '12px'
+      }}>
+        <h4 style={{ margin: '0 0 10px 0' }}>Army Bonuses</h4>
         {selectedArmy && selectedArmy.getArmyBonuses().map((bonus, index) => (
           <div key={index}>
             {bonus.type}: {bonus.value}
           </div>
         ))}
       </div>
-    </div>
+    </>
   );
 }
