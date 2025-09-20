@@ -272,6 +272,15 @@ export function WorldBoardComponent() {
             console.log(`King at (${selectedKingTileRef.current.x}, ${selectedKingTileRef.current.y}), clicked (${worldX}, ${worldY}), adjacent: ${isAdj}`);
             
             if (isAdj) {
+              // Check if destination tile is a production tile - prevent king movement
+              if (tile && tile.type === 'production') {
+                console.log(`Cannot move King to production tile at (${worldX}, ${worldY})`);
+                // Clear selection since move is not allowed
+                selectedKingTileRef.current = null;
+                forceRender(prev => prev + 1);
+                return;
+              }
+              
               // Move King to adjacent tile
               console.log(`Moving King from (${selectedKingTileRef.current.x}, ${selectedKingTileRef.current.y}) to (${worldX}, ${worldY})`);
               moveKing(selectedKingTileRef.current.x, selectedKingTileRef.current.y, worldX, worldY);
