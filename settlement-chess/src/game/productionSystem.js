@@ -5,7 +5,6 @@ export class ProductionSystem {
   constructor(worldBoard) {
     this.worldBoard = worldBoard;
     this.productionCosts = {
-      'factory': { 'P': 1 },    // 1 piece → 1 pawn
       'training': { 'P': 2 },   // 2 pawns → 1 piece
       'monastery': { 'B': 1 },  // 1 piece → 1 bishop
       'castle': { 'R': 1 },     // 1 piece → 1 rook

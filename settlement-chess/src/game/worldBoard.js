@@ -26,7 +26,7 @@ export class WorldBoard {
   }
 
   generateProductionNodes() {
-    const nodeTypes = ['factory', 'training', 'monastery', 'castle', 'stable'];
+    const nodeTypes = ['training', 'monastery', 'castle', 'stable'];
     const numNodes = 15; // Place 15 production nodes randomly
     
     for (let i = 0; i < numNodes; i++) {
@@ -42,8 +42,12 @@ export class WorldBoard {
         active: true
       });
       
-      // Mark the tile as having a production node
-      this.worldGrid[y][x] = { type: 'production', nodeType: type, nodeId: `node_${i}` };
+      // Mark the tile as having a production node (but allow other states too)
+      this.worldGrid[y][x] = { 
+        hasProduction: true, 
+        nodeType: type, 
+        nodeId: `node_${i}` 
+      };
     }
   }
 

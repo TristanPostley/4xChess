@@ -78,22 +78,11 @@ export function WorldBoardComponent() {
           continue;
         }
         
-        // Draw revealed tile
+        // Draw revealed tile - unified fill for all tiles
         const tile = board.worldGrid[y][x];
-        if (tile) {
-          if (tile.type === 'production') {
-            ctx.fillStyle = '#8B4513'; // Brown for production nodes
-          } else if (tile.type === 'claimed') {
-            ctx.fillStyle = tile.player === 'W' ? '#87CEEB' : '#8B0000'; // Light blue for white, dark red for black
-          } else if (tile.deployed) {
-            ctx.fillStyle = tile.color === 'W' ? '#F0F0F0' : '#404040';
-          } else {
-            ctx.fillStyle = '#4a4a4a';
-          }
-        } else {
-          ctx.fillStyle = '#4a4a4a'; // Dark gray for empty
-        }
         
+        // All tiles get the same base fill
+        ctx.fillStyle = '#4a4a4a'; // Dark gray for all tiles
         ctx.fillRect(screenX, screenY, scaledTileSize, scaledTileSize);
         
         // Draw grid lines
@@ -101,22 +90,48 @@ export function WorldBoardComponent() {
         ctx.lineWidth = 1;
         ctx.strokeRect(screenX, screenY, scaledTileSize, scaledTileSize);
         
-        // Draw gold border for selected King tile
+        // Draw informational borders based on tile state
+        if (tile) {
+          // Production tile border (green)
+          if (tile.hasProduction) {
+            ctx.strokeStyle = '#00b14d'; // Green color
+            ctx.lineWidth = 4;
+            ctx.strokeRect(screenX + 2, screenY + 2, scaledTileSize - 4, scaledTileSize - 4);
+          }
+          
+          // Claimed territory border (blue for white player, red for black)
+          if (tile.claimedBy) {
+            const claimColor = tile.claimedBy === 'W' ? '#87CEEB' : '#8B0000';
+            ctx.strokeStyle = claimColor;
+            ctx.lineWidth = 3;
+            ctx.strokeRect(screenX + 1, screenY + 1, scaledTileSize - 2, scaledTileSize - 2);
+          }
+          
+          // Deployed piece border (white for white pieces, dark gray for black)
+          if (tile.deployed) {
+            const pieceColor = tile.color === 'W' ? '#F0F0F0' : '#404040';
+            ctx.strokeStyle = pieceColor;
+            ctx.lineWidth = 2;
+            ctx.strokeRect(screenX + 3, screenY + 3, scaledTileSize - 6, scaledTileSize - 6);
+          }
+        }
+        
+        // Draw gold border for selected King tile (highest priority)
         if (selectedKingTileRef.current && selectedKingTileRef.current.x === x && selectedKingTileRef.current.y === y) {
           ctx.strokeStyle = '#FFD700'; // Gold color
-          ctx.lineWidth = 4; // Thick border
+          ctx.lineWidth = 4;
           ctx.strokeRect(screenX + 2, screenY + 2, scaledTileSize - 4, scaledTileSize - 4);
         }
 
-        // Draw blue borders for adjacent tiles
+        // Draw blue borders for adjacent tiles (second highest priority)
         if (selectedKingTileRef.current && isAdjacent(selectedKingTileRef.current.x, selectedKingTileRef.current.y, x, y)) {
           ctx.strokeStyle = '#0066FF'; // Blue color
-          ctx.lineWidth = 2; // Medium border
+          ctx.lineWidth = 2;
           ctx.strokeRect(screenX + 1, screenY + 1, scaledTileSize - 2, scaledTileSize - 2);
         }
 
         // Draw piece symbols
-        if (tile && tile.type !== 'production' && tile.type !== 'claimed') {
+        if (tile && tile.type === 'K') {
           ctx.fillStyle = tile.color === 'W' ? '#FFF' : '#000';
           ctx.font = `${scaledTileSize * 0.6}px Arial`;
           ctx.textAlign = 'center';
@@ -127,9 +142,9 @@ export function WorldBoardComponent() {
         }
         
         // Draw production node symbols
-        if (tile && tile.type === 'production') {
+        if (tile && tile.hasProduction) {
           ctx.fillStyle = '#FFD700';
-          ctx.font = `${scaledTileSize * 0.4}px Arial`;
+          ctx.font = `${scaledTileSize * 0.6}px Arial`;
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
           
@@ -155,7 +170,7 @@ export function WorldBoardComponent() {
 
   const getProductionSymbol = (nodeType) => {
     const symbols = {
-      'factory': '⚒', 'training': '⚔', 'monastery': '⛪', 'castle': '🏰', 'stable': '🐎'
+      'training': '♙', 'monastery': '♗', 'castle': '♖', 'stable': '♘'
     };
     return symbols[nodeType] || '?';
   };
@@ -272,8 +287,8 @@ export function WorldBoardComponent() {
             console.log(`King at (${selectedKingTileRef.current.x}, ${selectedKingTileRef.current.y}), clicked (${worldX}, ${worldY}), adjacent: ${isAdj}`);
             
             if (isAdj) {
-              // Check if destination tile is a production tile - prevent king movement
-              if (tile && tile.type === 'production') {
+              // Check if destination tile has production - prevent king movement
+              if (tile && tile.hasProduction) {
                 console.log(`Cannot move King to production tile at (${worldX}, ${worldY})`);
                 // Clear selection since move is not allowed
                 selectedKingTileRef.current = null;

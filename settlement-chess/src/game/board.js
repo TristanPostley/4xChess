@@ -43,9 +43,24 @@ export function claimTerritory(worldBoard, x, y, playerId) {
   const { claimedTerritory, worldGrid } = worldBoard;
   const key = `${x},${y}`;
   
-  if (!claimedTerritory.has(key) && worldGrid[y][x] === null) {
+  // Allow claiming empty tiles OR tiles with production (but not already claimed)
+  const tile = worldGrid[y][x];
+  const isClaimable = tile === null || (tile && tile.hasProduction && !tile.claimedBy);
+  
+  if (!claimedTerritory.has(key) && isClaimable) {
     claimedTerritory.add(key);
-    worldGrid[y][x] = { type: 'claimed', player: playerId };
+    
+    // Preserve existing tile properties while adding claim
+    if (tile) {
+      // Tile has production, add claim to existing tile
+      worldGrid[y][x] = {
+        ...tile,
+        claimedBy: playerId
+      };
+    } else {
+      // Empty tile, create new claimed tile
+      worldGrid[y][x] = { claimedBy: playerId };
+    }
     return true;
   }
   
